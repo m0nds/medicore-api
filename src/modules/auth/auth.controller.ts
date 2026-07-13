@@ -6,7 +6,7 @@ import * as authService from "./auth.service"
 import { UnauthorizedError, ValidationError } from "../../shared/utils/errors"
 import redis from "../../config/redis"
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "./auth.jwt"
-import prisma from "@/config/database"
+import prisma from "../../config/database"
 
 // auth.controller.ts — Every handler does three things 
 // only: validate input, call the service, send the response.

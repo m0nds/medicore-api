@@ -7,6 +7,7 @@ import logger from "./config/logger"
 import { errorHandler } from "./shared/middleware/errorHandler"
 import { requestLogger } from "./shared/middleware/requestLogger"
 import authRouter from "./modules/auth/auth.routes"
+import userRouter from "./modules/users/user.routes"
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use("/api/auth", authRouter)
+app.use("/api/users", userRouter)
 
 app.get("/health", (_req, res) => {
   res.json({
