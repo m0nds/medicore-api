@@ -6,7 +6,7 @@ import { env } from "./config/env"
 import logger from "./config/logger"
 import { errorHandler } from "./shared/middleware/errorHandler"
 import { requestLogger } from "./shared/middleware/requestLogger"
-
+import authRouter from "./modules/auth/auth.routes"
 
 const app = express()
 
@@ -15,6 +15,8 @@ app.disable("x-powered-by")
 app.use(requestLogger) 
 app.use(express.json())
 app.use(cookieParser())
+
+app.use("/api/auth", authRouter)
 
 app.get("/health", (_req, res) => {
   res.json({
