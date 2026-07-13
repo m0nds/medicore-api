@@ -48,3 +48,13 @@ export const updateMe = async (userId: string, data: { name?: string }) => {
 
     return safeUser
 }
+
+export const updateUserStatus = async (userId: string, isActive: boolean) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) throw new NotFoundError("User")
+  
+    return prisma.user.update({
+      where: { id: userId },
+      data: { isActive, updatedAt: new Date() }
+    })
+  }

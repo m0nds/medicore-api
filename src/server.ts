@@ -8,6 +8,7 @@ import { errorHandler } from "./shared/middleware/errorHandler"
 import { requestLogger } from "./shared/middleware/requestLogger"
 import authRouter from "./modules/auth/auth.routes"
 import userRouter from "./modules/users/user.routes"
+import departmentRouter from "./modules/departments/department.routes"
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.use(cookieParser())
 
 app.use("/api/auth", authRouter)
 app.use("/api/users", userRouter)
+app.use("/api/departments", departmentRouter)
 
 app.get("/health", (_req, res) => {
   res.json({

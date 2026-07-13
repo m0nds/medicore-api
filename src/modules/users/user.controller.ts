@@ -18,3 +18,12 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   const user = await userService.updateMe(req.user!.id, parsed.data)
   sendSuccess(res, user, "Profile updated successfully")
 })
+
+export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
+    const { isActive } = req.body
+    if (typeof isActive !== "boolean") {
+      throw new ValidationError("isActive must be a boolean")
+    }
+    const user = await userService.updateUserStatus(req.params.id as string, isActive)
+    sendSuccess(res, user, `Account ${isActive ? "activated" : "deactivated"} successfully`)
+  })

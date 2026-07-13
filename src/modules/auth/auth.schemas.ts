@@ -5,7 +5,7 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$
 export const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email format"),
-  role: z.enum(["PATIENT", "DOCTOR", "RECEPTIONIST", "ADMIN"], {
+  role: z.enum(["PATIENT", "DOCTOR", "RECEPTIONIST"], {
     error: "Role is required"
   }),
   password: z.string()
