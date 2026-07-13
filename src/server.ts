@@ -5,12 +5,14 @@ import cookieParser from "cookie-parser"
 import { env } from "./config/env"
 import logger from "./config/logger"
 import { errorHandler } from "./shared/middleware/errorHandler"
+import { requestLogger } from "./shared/middleware/requestLogger"
 
 
 const app = express()
 
 app.use(helmet())
 app.disable("x-powered-by")
+app.use(requestLogger) 
 app.use(express.json())
 app.use(cookieParser())
 
