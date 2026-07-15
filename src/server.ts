@@ -9,6 +9,7 @@ import { requestLogger } from "./shared/middleware/requestLogger"
 import authRouter from "./modules/auth/auth.routes"
 import userRouter from "./modules/users/user.routes"
 import departmentRouter from "./modules/departments/department.routes"
+import patientRouter from "./modules/patients/patient.routes"
 
 const app = express()
 
@@ -21,6 +22,8 @@ app.use(cookieParser())
 app.use("/api/auth", authRouter)
 app.use("/api/users", userRouter)
 app.use("/api/departments", departmentRouter)
+app.use("/api/patients", patientRouter)
+
 
 app.get("/health", (_req, res) => {
   res.json({

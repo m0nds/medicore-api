@@ -4,7 +4,7 @@ import * as departmentService from './department.service'
 import { getPagination, getTotalPages } from "../../shared/utils/pagination"
 import { Request, Response } from "express"
 import { createDepartmentSchema, updateDepartmentSchema } from "./department.schemas";
-import { NotFoundError, ValidationError } from "../../shared/utils/errors";
+import { ValidationError } from "../../shared/utils/errors";
 
 export const getAllDepartments = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit } = getPagination(req.query)
