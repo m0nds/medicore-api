@@ -8,14 +8,11 @@ import { ValidationError } from "../../shared/utils/errors";
 
 export const getAllDepartments = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit } = getPagination(req.query)
-    const departments = await departmentService.getAllDepartments()
-    const total = departments.length
-    const totalPages = getTotalPages(total, limit)
-    sendPaginated(res, departments, {
-        page,
-        limit,
-        total,
-        totalPages
+    const result = await departmentService.getAllDepartments(req.query)
+    sendPaginated(res, result.departments, {
+        page, limit,
+        total: result.total,
+        totalPages: getTotalPages(result.total, limit)
     })
 })
 
@@ -45,4 +42,4 @@ export const updateDepartment = asyncHandler(async (req: Request, res: Response)
 export const deleteDepartment = asyncHandler(async (req: Request, res: Response) => {
     const result = await departmentService.deleteDepartment(req.params.id as string)
     sendSuccess(res, result, "Department deleted successfully")
-  })
+})

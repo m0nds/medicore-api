@@ -16,7 +16,7 @@ export const updateMyPatientProfile = asyncHandler(async (req: Request, res: Res
     if (!parsed.success) {
         throw new ValidationError(parsed.error.issues.map(e => e.message).join("; "))
     }
-    const user = await patientService.updateMyPatientProfile(req.params.id as string, parsed.data)
+    const user = await patientService.updateMyPatientProfile(req.user!.id as string, parsed.data)
     sendSuccess(res, user, "Patient profile updated successfully")
 })
 
@@ -25,7 +25,7 @@ export const getAllPatients = asyncHandler(async (req: Request, res: Response) =
     const patient = await patientService.getAllPatients(req.query)
     const total = patient.total
     const totalPages = getTotalPages(total, limit)
-    sendPaginated(res, patient, {
+    sendPaginated(res, patient.patients, {
         page,
         limit,
         total,

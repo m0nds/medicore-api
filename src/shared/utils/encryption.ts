@@ -50,13 +50,3 @@ export const decryptIfExists = (value: string | null | undefined): string | null
     if (!value) return null
     return decrypt(value)
 }
-
-// temporary test — delete after confirming
-const original = "Patient has Type 2 Diabetes"
-const encrypted = encrypt(original)
-const decrypted = decrypt(encrypted)
-
-console.log("Original: ", original)
-console.log("Encrypted:", encrypted)
-console.log("Decrypted:", decrypted)
-console.log("Match:", original === decrypted)

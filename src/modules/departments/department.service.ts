@@ -1,29 +1,35 @@
 import prisma from "../../config/database"
 import { CreateDepartmentInput, UpdateDepartmentInput } from "./department.schemas"
 import { ConflictError, NotFoundError } from "../../shared/utils/errors"
+import { getPagination } from "../../shared/utils/pagination"
 
-export const getAllDepartments = async () => {
-    const allDepartments = await prisma.department.findMany({
-        include: {
-            headDoctor: {
-                include: {
-                    user: {
-                        select: { name: true, email: true }
-                    }
-                }
-            },
-            doctors: {
-                include: {
-                    user: {
-                        select: { name: true, email: true }
-                    }
-                }
+export const getAllDepartments = async (query: Record<string, unknown>) => {
+    const { limit, skip } = getPagination(query)
+  
+    const departments = await prisma.department.findMany({
+      skip,
+      take: limit,
+      include: {
+        headDoctor: {
+          include: {
+            user: {
+              select: { name: true, email: true }
             }
+          }
+        },
+        doctors: {
+          include: {
+            user: {
+              select: { name: true, email: true }
+            }
+          }
         }
+      }
     })
-
-    return allDepartments
-}
+  
+    const total = await prisma.department.count()
+    return { departments, total }
+  }
 
 export const getDepartmentById = async (id: string) => {
 
