@@ -1,4 +1,4 @@
-import { sendSuccess, sendPaginated, sendCreated } from "../../shared/utils/apiResponse";
+import { sendSuccess, sendPaginated } from "../../shared/utils/apiResponse";
 import { asyncHandler } from "../../shared/utils/asyncHandler";
 import * as patientService from './patient.service'
 import { getPagination, getTotalPages } from "../../shared/utils/pagination"
