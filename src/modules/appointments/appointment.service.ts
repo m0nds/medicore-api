@@ -33,13 +33,6 @@ const canTransition = (current: string, next: string): boolean => {
     return VALID_TRANSITIONS[current]?.includes(next) ?? false
 }
 
-// bookAppointment(patientUserId, data)
-// 1. Find patient by userId — throw NotFoundError if not found
-// 2. Find doctor by doctorId — throw NotFoundError if not found
-// 3. Check doctor.isAvailable — throw AppError 400 if not
-// 4. Create appointment with status SCHEDULED
-// 5. Return appointment with include
-
 export const bookAppointment = async (patientUserId: string, data: BookAppointmentInput) => {
     const findPatient = await prisma.patient.findUnique({ where: { userId: patientUserId } })
     if (!findPatient) {
@@ -62,14 +55,6 @@ export const bookAppointment = async (patientUserId: string, data: BookAppointme
     return createAppointment
 }
 
-// getMyAppointments(userId, role, query)
-// If role === PATIENT:
-//   find patient by userId, get appointments where patientId matches
-// If role === DOCTOR:
-//   find doctor by userId, get appointments where doctorId matches
-// If role === RECEPTIONIST or ADMIN:
-//   get all appointments
-// Return paginated results
 
 export const getMyAppointments = async (userId: string, role: string, query: Record<string, unknown>) => {
     const { limit, skip, page } = getPagination(query);
@@ -101,15 +86,6 @@ export const getMyAppointments = async (userId: string, role: string, query: Rec
     return { appointments, total, page, limit }
 }
 
-// getAppointmentById(appointmentId, userId, role)
-// 1. Find appointment by id with include
-// 2. Throw NotFoundError if not found
-// 3. If PATIENT — verify appointment.patient.userId === userId
-//    if not → throw ForbiddenError
-// 4. If DOCTOR — verify appointment.doctor.userId === userId
-//    if not → throw ForbiddenError
-// 5. Return appointment
-
 export const getAppointmentById = async (appointmentId: string, userId: string, role: string) => {
     const findAppointment = await prisma.appointment.findUnique({where: {id: appointmentId}, include: appointmentInclude} )
 
@@ -134,31 +110,22 @@ export const updateAppointmentStatus = async (
     role: string,
     cancellationReason?: string
   ) => {
-    // Step 1 — find appointment
-    // throw NotFoundError if not found
     const findAppointment = await prisma.appointment.findUnique({where: {id: appointmentId}, include: appointmentInclude} )
 
     if(!findAppointment) {
         throw new NotFoundError("appointment")
     }
-  
-    // Step 2 — check transition is valid
-    // if (!canTransition(appointment.status, newStatus))
-    //   throw AppError 400 "Cannot move from X to Y"
+
+    const existingRecord = await prisma.medicalRecord.findUnique({
+        where: { appointmentId: findAppointment.id }
+      })
+      if (existingRecord) {
+        throw new AppError("Cannot modify appointment after medical record has been created", 400)
+      }
 
     if (!canTransition(findAppointment.status, newStatus)) {
         throw new AppError(`Cannot move from ${findAppointment.status} to ${newStatus}`, 400) 
     }
-  
-    // Step 3 — check role permission for this transition
-    // CONFIRMED  → DOCTOR or RECEPTIONIST only
-    // IN_PROGRESS → DOCTOR only  
-    // COMPLETED  → DOCTOR only
-    // NO_SHOW    → DOCTOR or RECEPTIONIST only
-    // CANCELLED  → 
-    //   if PATIENT: can only cancel their own appointment
-    //   if DOCTOR: can only cancel their own appointment
-    //   if RECEPTIONIST or ADMIN: can cancel any
 
    if(newStatus === "CONFIRMED" || newStatus === "NO_SHOW") {
     if(role !== "DOCTOR" && role !== "RECEPTIONIST") {
@@ -184,10 +151,6 @@ export const updateAppointmentStatus = async (
     }
    }
   
-    // Step 4 — build update data
-    // base: { status: newStatus, updatedAt: new Date() }
-    // if CANCELLED: add cancelledAt, cancelledBy: userId, cancellationReason
-    // if NO_SHOW: add cancelledAt: new Date()
 
     const updatedData: Record<string, unknown> = {
      status: newStatus, updatedAt: new Date() 
@@ -203,7 +166,6 @@ export const updateAppointmentStatus = async (
         updatedData.cancelledAt = new Date()
     }
   
-    // Step 5 — update and return with include
     const updated = await prisma.appointment.update({
         where: {id: appointmentId},
         data: updatedData,

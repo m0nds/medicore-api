@@ -4,7 +4,7 @@ import * as appointmentService from './appointment.service'
 import { getPagination, getTotalPages } from "../../shared/utils/pagination"
 import { Request, Response } from "express"
 import { ValidationError } from "../../shared/utils/errors";
-import { bookAppointmentSchema, cancelAppointmentSchema } from './appointment.schemas'
+import { bookAppointmentSchema } from './appointment.schemas'
 
 export const bookAppointment = asyncHandler(async (req: Request, res: Response) => {
     const parsed = bookAppointmentSchema.safeParse(req.body)

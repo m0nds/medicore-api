@@ -12,6 +12,7 @@ import departmentRouter from "./modules/departments/department.routes"
 import patientRouter from "./modules/patients/patient.routes"
 import doctorRouter from "./modules/doctors/doctor.routes"
 import appointmentRouter from "./modules/appointments/appointment.routes"
+import recordRouter from './modules/medical-records/record.routes'
 
 const app = express()
 
@@ -27,6 +28,8 @@ app.use("/api/departments", departmentRouter)
 app.use("/api/patients", patientRouter)
 app.use("/api/doctors", doctorRouter)
 app.use("/api/appointments", appointmentRouter)
+app.use("/api/medical-records", recordRouter)
+
 
 app.get("/health", (_req, res) => {
   res.json({
