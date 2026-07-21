@@ -131,7 +131,7 @@ export const updateMedicalRecord = async (recordId: string, doctorUserId: string
     }
 
     if(records.doctorId !== doctor.id) {
-        throw new ForbiddenError("you can't update this recordd")
+        throw new ForbiddenError("you can't update this record")
     }
 
     const updateRecord = await prisma.medicalRecord.update({

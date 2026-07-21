@@ -18,10 +18,10 @@ export const createMedicalRecord = asyncHandler(async (req: Request, res: Respon
 
 export const getMyMedicalRecords = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit } = getPagination(req.query)
-    const appointments = await recordService.getMyMedicalRecords(req.user!.id, req.user!.role, req.query)
-    const total = appointments.total
+    const record = await recordService.getMyMedicalRecords(req.user!.id, req.user!.role, req.query)
+    const total = record.total
     const totalPages = getTotalPages(total, limit)
-    sendPaginated(res, appointments.records, {
+    sendPaginated(res, record.records, {
         page,
         limit,
         total,
