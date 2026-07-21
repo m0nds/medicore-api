@@ -54,13 +54,6 @@ export const createPrescription = async (doctorUserId: string, data: CreatePresc
 
 }
 
-// getMyPrescriptions(userId, role, query)
-// Same pattern as getMyMedicalRecords
-// PATIENT → filter by patientId
-// DOCTOR  → filter by doctorId
-// RECEPTIONIST → ForbiddenError
-// Paginate, decrypt, audit log VIEW
-
 export const getMyPrescriptions = async (userId: string, role: string, query: Record<string, unknown>) => {
     const { limit, skip, page } = getPagination(query);
     let where = {}
@@ -99,13 +92,6 @@ export const getMyPrescriptions = async (userId: string, role: string, query: Re
     return { prescription: prescription.map(p => decryptPrescription(p)), total, page, limit }
 }
 
-// getPrescriptionById(prescriptionId, userId, role)
-// Find by id with include
-// Access control — same as medical records
-// RECEPTIONIST → blocked
-// Audit log VIEW
-// Decrypt and return
-
 export const getPrescriptionById = async (prescriptionId: string, userId: string, role: string, ipAddress: string, userAgent: string) => {
     const prescription = await prisma.prescription.findUnique({ where: { id: prescriptionId }, include: prescriptionInclude })
     if (!prescription) {
@@ -113,15 +99,15 @@ export const getPrescriptionById = async (prescriptionId: string, userId: string
     }
 
     if (role === "RECEPTIONIST") {
-        throw new ForbiddenError("Receptionists cannot access medical records")
+        throw new ForbiddenError("Receptionists cannot access prescription")
       }
 
     if (role === "PATIENT" && prescription.patient.userId !== userId) {
-        throw new ForbiddenError("You are not allowed to view this record")
+        throw new ForbiddenError("You are not allowed to view this prescription")
     }
 
     if (role === "DOCTOR" && prescription.doctor.userId !== userId) {
-        throw new ForbiddenError("You are not allowed to view this record")
+        throw new ForbiddenError("You are not allowed to view this prescription")
     }
 
     await createAuditLog(userId, "VIEW", "Prescription", prescription.id, undefined, ipAddress, userAgent)
@@ -129,14 +115,6 @@ export const getPrescriptionById = async (prescriptionId: string, userId: string
     const decryptedRecord = decryptPrescription(prescription)
     return decryptedRecord
 }
-
-// deactivatePrescription(prescriptionId, doctorUserId)
-// Find prescription
-// Find doctor by userId
-// Check prescription.doctorId === doctor.id
-// Update isActive: false
-// Audit log UPDATE
-// Return updated
 
 export const deactivatePrescription = async (prescriptionId: string, doctorUserId: string) => {
     const prescription = await prisma.prescription.findUnique({ where: { id: prescriptionId }, include: prescriptionInclude })
