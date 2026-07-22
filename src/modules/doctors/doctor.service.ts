@@ -1,7 +1,8 @@
 import { getPagination } from "../../shared/utils/pagination"
 import prisma from "../../config/database"
-import { NotFoundError, ForbiddenError, ConflictError } from "../../shared/utils/errors"
+import { NotFoundError, ConflictError } from "../../shared/utils/errors"
 import { UpdateDoctorInput } from "./doctor.schemas";
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../../shared/utils/cache"
 
 
 const doctorInclude = {
@@ -15,28 +16,32 @@ const doctorInclude = {
 }
 
 export const getAllDoctors = async (query: Record<string, unknown>) => {
-    const { limit, skip } = getPagination(query);
+    const { limit, skip, page } = getPagination(query)
 
-    const where = {
-        ...(query.available === true && {
-            isAvailable: true
-        })
-    }
+    // cache key includes pagination so page 1 and page 2 are separate caches
+    const cacheKey = `doctors:list:page${page}:limit${limit}`
 
-    // Using Promise.all() runs both queries at the same time, which is more efficient than awaiting them one after the other.
+    // check cache first
+    const cached = await getCache(cacheKey)
+    if (cached) return cached
+
+    // cache miss — hit database
     const [doctors, total] = await Promise.all([
         prisma.doctor.findMany({
-            where,
             skip,
             take: limit,
             include: doctorInclude
         }),
-
-        prisma.doctor.count({ where })
+        prisma.doctor.count()
     ])
 
-    return { doctors, total };
-};
+    const result = { doctors, total, page, limit }
+
+    // store in cache for 5 minutes
+    await setCache(cacheKey, result, 300)
+
+    return result
+}
 
 export const getDoctorById = async (id: string) => {
     const doctor = await prisma.doctor.findUnique({
@@ -77,6 +82,8 @@ export const updateMyDoctorProfile = async (userId: string, data: UpdateDoctorIn
             updatedAt: new Date()
         }
     })
+    await deleteCachePattern("doctors:list:*")
+
     return updatedData
 }
 
@@ -91,6 +98,8 @@ export const updateAvailability = async (userId: string, isAvailable: boolean) =
             isAvailable
         }
     })
+    await deleteCachePattern("doctors:list:*")
+
     return updatedData
 }
 
@@ -129,11 +138,11 @@ export const removeSpecialisation = async (doctorId: string, specialisationId: s
         throw new NotFoundError('specialization')
     }
 
-      // check the ASSIGNMENT exists — this is what was missing
-  const existing = await prisma.doctorSpecialisation.findUnique({
-    where: { doctorId_specialisationId: { doctorId, specialisationId } }
-  })
-  if (!existing) throw new NotFoundError('specialisation assignment')
+    // check the ASSIGNMENT exists — this is what was missing
+    const existing = await prisma.doctorSpecialisation.findUnique({
+        where: { doctorId_specialisationId: { doctorId, specialisationId } }
+    })
+    if (!existing) throw new NotFoundError('specialisation assignment')
 
     await prisma.doctorSpecialisation.delete({
         where: { doctorId_specialisationId: { doctorId, specialisationId } }
