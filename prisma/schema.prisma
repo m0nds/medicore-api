@@ -104,6 +104,7 @@ model Patient {
   labOrders               LabOrder[]
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
+  @@index([userId])
 }
 
 model Doctor {
@@ -124,6 +125,9 @@ model Doctor {
   medicalRecords    MedicalRecord[]
   labOrders         LabOrder[]
   prescriptions     Prescription[]
+  @@index([userId])
+  @@index([departmentId])
+  @@index([isAvailable])
 }
 
 model Receptionist {
@@ -212,6 +216,7 @@ model MedicalRecord {
 
   @@index([patientId])
   @@index([doctorId])
+  @@index([visitDate])
 }
 
 model Prescription {
