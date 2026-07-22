@@ -2,6 +2,8 @@ import prisma from "../../config/database"
 import { NotFoundError, ForbiddenError, AppError } from "../../shared/utils/errors"
 import { BookAppointmentInput, CancelAppointmentInput } from "./appointment.schemas"
 import { getPagination } from "../../shared/utils/pagination"
+import { sendNotification } from "../notifications/notification.service"
+import { NotificationType, Prisma } from "@prisma/client"
 
 // SCHEDULED → CONFIRMED → IN_PROGRESS → COMPLETED
 //           ↘ CANCELLED                ↘ NO_SHOW
@@ -34,7 +36,10 @@ const canTransition = (current: string, next: string): boolean => {
 }
 
 export const bookAppointment = async (patientUserId: string, data: BookAppointmentInput) => {
-    const findPatient = await prisma.patient.findUnique({ where: { userId: patientUserId } })
+    const findPatient = await prisma.patient.findUnique({
+        where: { userId: patientUserId },
+        include: { user: { select: { name: true } } }
+    })
     if (!findPatient) {
         throw new NotFoundError("patient")
     }
@@ -47,12 +52,28 @@ export const bookAppointment = async (patientUserId: string, data: BookAppointme
         throw new AppError("Doctor is not available for appointments", 400)
     }
 
-    const createAppointment = await prisma.appointment.create({
-        data: { ...data, patientId: findPatient.id, status: "SCHEDULED", updatedAt: new Date() },
-        include: appointmentInclude
-    })
+    try {
+        const createAppointment = await prisma.appointment.create({
+            data: { ...data, patientId: findPatient.id, status: "SCHEDULED", updatedAt: new Date() },
+            include: appointmentInclude
+        })
 
-    return createAppointment
+        await sendNotification(
+            findDoctor.userId,  // notify the doctor (their userId, not doctor.id)
+            NotificationType.APPOINTMENT_BOOKED,
+            "New Appointment Booked",
+            `${findPatient.user?.name ?? "A patient"} has booked an appointment with you on ${data.scheduledAt.toISOString()}`,
+            createAppointment.id
+        )
+
+        return createAppointment
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            throw new AppError("This doctor already has an appointment at the selected time", 409)
+        }
+        throw error  // re-throw anything else
+    }
+
 }
 
 
@@ -87,20 +108,20 @@ export const getMyAppointments = async (userId: string, role: string, query: Rec
 }
 
 export const getAppointmentById = async (appointmentId: string, userId: string, role: string) => {
-    const findAppointment = await prisma.appointment.findUnique({where: {id: appointmentId}, include: appointmentInclude} )
+    const findAppointment = await prisma.appointment.findUnique({ where: { id: appointmentId }, include: appointmentInclude })
 
-    if(!findAppointment) {
+    if (!findAppointment) {
         throw new NotFoundError("appointment")
     }
 
-    if(role === "PATIENT" && findAppointment.patient.userId !== userId) {
- throw new ForbiddenError()
+    if (role === "PATIENT" && findAppointment.patient.userId !== userId) {
+        throw new ForbiddenError()
     }
-    if(role === "DOCTOR" && findAppointment.doctor.userId !== userId) {
-    throw new ForbiddenError()
+    if (role === "DOCTOR" && findAppointment.doctor.userId !== userId) {
+        throw new ForbiddenError()
     }
 
-return findAppointment
+    return findAppointment
 }
 
 export const updateAppointmentStatus = async (
@@ -109,68 +130,77 @@ export const updateAppointmentStatus = async (
     userId: string,
     role: string,
     cancellationReason?: string
-  ) => {
-    const findAppointment = await prisma.appointment.findUnique({where: {id: appointmentId}, include: appointmentInclude} )
+) => {
+    const findAppointment = await prisma.appointment.findUnique({ where: { id: appointmentId }, include: appointmentInclude })
 
-    if(!findAppointment) {
+    if (!findAppointment) {
         throw new NotFoundError("appointment")
     }
 
     const existingRecord = await prisma.medicalRecord.findUnique({
         where: { appointmentId: findAppointment.id }
-      })
-      if (existingRecord) {
+    })
+    if (existingRecord) {
         throw new AppError("Cannot modify appointment after medical record has been created", 400)
-      }
+    }
 
     if (!canTransition(findAppointment.status, newStatus)) {
-        throw new AppError(`Cannot move from ${findAppointment.status} to ${newStatus}`, 400) 
+        throw new AppError(`Cannot move from ${findAppointment.status} to ${newStatus}`, 400)
     }
 
-   if(newStatus === "CONFIRMED" || newStatus === "NO_SHOW") {
-    if(role !== "DOCTOR" && role !== "RECEPTIONIST") {
-        throw new ForbiddenError("Only doctors and receptionists can perform this action")
+    if (newStatus === "CONFIRMED" || newStatus === "NO_SHOW") {
+        if (role !== "DOCTOR" && role !== "RECEPTIONIST") {
+            throw new ForbiddenError("Only doctors and receptionists can perform this action")
+        }
     }
-   }
 
-   if(newStatus === "IN_PROGRESS" || newStatus === "COMPLETED") {
-    if(role !== "DOCTOR") {
-        throw new ForbiddenError("Only doctors can perform this action")
+    if (newStatus === "IN_PROGRESS" || newStatus === "COMPLETED") {
+        if (role !== "DOCTOR") {
+            throw new ForbiddenError("Only doctors can perform this action")
+        }
     }
-   }
 
-   if(newStatus === "CANCELLED") {
-    if(role === "PATIENT" && findAppointment.patient.userId !== userId) {
-        throw new ForbiddenError("You can only cancel your own appointments")
+    if (newStatus === "CANCELLED") {
+        if (role === "PATIENT" && findAppointment.patient.userId !== userId) {
+            throw new ForbiddenError("You can only cancel your own appointments")
+        }
+        if (role === "DOCTOR" && findAppointment.doctor.userId !== userId) {
+            throw new ForbiddenError("You can only cancel your own appointments")
+        }
+        if (!cancellationReason) {
+            throw new AppError("Cancellation reason is required", 400)
+        }
     }
-    if(role === "DOCTOR" && findAppointment.doctor.userId !== userId) {
-        throw new ForbiddenError("You can only cancel your own appointments")
-    }
-    if(!cancellationReason) {
-        throw new AppError("Cancellation reason is required", 400) 
-    }
-   }
-  
+
 
     const updatedData: Record<string, unknown> = {
-     status: newStatus, updatedAt: new Date() 
+        status: newStatus, updatedAt: new Date()
     }
 
-    if(newStatus === "CANCELLED") {
+    if (newStatus === "CANCELLED") {
         updatedData.cancelledAt = new Date()
         updatedData.cancelledBy = userId
         updatedData.cancellationReason = cancellationReason
     }
 
-    if(newStatus === "NO_SHOW") {
+    if (newStatus === "NO_SHOW") {
         updatedData.cancelledAt = new Date()
     }
-  
+
     const updated = await prisma.appointment.update({
-        where: {id: appointmentId},
+        where: { id: appointmentId },
         data: updatedData,
         include: appointmentInclude
     })
 
+    // in updateAppointmentStatus, after update, when newStatus === "CONFIRMED"
+    await sendNotification(
+        findAppointment.patient.userId,
+        NotificationType.APPOINTMENT_CONFIRMED,
+        "Appointment Confirmed",
+        `Your appointment has been confirmed for ${findAppointment.scheduledAt}`,
+        appointmentId
+    )
+
     return updated
-  }
+}

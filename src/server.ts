@@ -17,10 +17,15 @@ import prescriptionRouter from "./modules/prescriptions/prescription.routes"
 import labOrderRouter from "./modules/lab-results/lab.routes"
 import labResultRouter from "./modules/lab-results/result.routes"
 import auditLogRouter from "./modules/audit-logs/auditLog.routes"
+import { createServer } from "http"
+import { initializeSocket } from "./modules/notifications/notification.gateway"
 
 const app = express()
 
-app.use(helmet())
+app.use(helmet({
+  contentSecurityPolicy: false,  // allows WebSocket connections
+  crossOriginEmbedderPolicy: false
+}))
 app.disable("x-powered-by")
 app.use(requestLogger) 
 app.use(express.json())
@@ -46,9 +51,13 @@ app.get("/health", (_req, res) => {
   })
 })
 
+
 app.use(errorHandler)
 
-app.listen(env.PORT, () => {
+const httpServer = createServer(app)
+initializeSocket(httpServer)
+
+httpServer.listen(env.PORT, () => {
   logger.info(`MediCore API running on http://localhost:${env.PORT}`)
 })
 

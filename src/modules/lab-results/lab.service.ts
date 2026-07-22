@@ -4,6 +4,8 @@ import { encrypt, decryptIfExists } from "../../shared/utils/encryption"
 import { createAuditLog } from "../../shared/middleware/auditLog"
 import { CreateLabOrderInput, CreateLabResultInput } from "./lab.schemas"
 import { getPagination } from "../../shared/utils/pagination"
+import { sendNotification } from "../notifications/notification.service"
+import { NotificationType } from "@prisma/client"
 
 const labOrderInclude = {
     patient: { include: { user: { select: { name: true, email: true } } } },
@@ -80,13 +82,13 @@ export const getMyLabOrders = async (userId: string, role: string, query: Record
     await Promise.all(
         labOrder.map(l => createAuditLog(userId, "VIEW", "LabOrder", l.id))
     )
-    return { 
+    return {
         labOrders: labOrder.map(o => ({
-          ...o,
-          labResult: o.labResult ? decryptLabResult(o.labResult) : null
-        })), 
-        total, page, limit 
-      }
+            ...o,
+            labResult: o.labResult ? decryptLabResult(o.labResult) : null
+        })),
+        total, page, limit
+    }
 }
 
 
@@ -112,7 +114,7 @@ export const getLabOrderById = async (labOrderId: string, userId: string, role: 
     return labOrder
 }
 
-export const createLabResult = async (labOrderId: string, userId: string, role:string, data: CreateLabResultInput) => {
+export const createLabResult = async (labOrderId: string, userId: string, role: string, data: CreateLabResultInput) => {
     const labOrder = await prisma.labOrder.findUnique({ where: { id: labOrderId }, include: labOrderInclude })
     if (!labOrder) {
         throw new NotFoundError("lab order")
@@ -125,13 +127,13 @@ export const createLabResult = async (labOrderId: string, userId: string, role:s
 
     if (role === "DOCTOR") {
         const doctor = await prisma.doctor.findUnique({ where: { userId } })
-        if(!doctor) {
+        if (!doctor) {
             throw new NotFoundError("doctor")
         }
         if (labOrder.doctorId !== doctor.id) {
-          throw new ForbiddenError("You can only upload results for your own lab orders")
+            throw new ForbiddenError("You can only upload results for your own lab orders")
         }
-      }
+    }
 
     const labResult = await prisma.labResult.create({
         data: {
@@ -144,6 +146,15 @@ export const createLabResult = async (labOrderId: string, userId: string, role:s
             updatedAt: new Date()
         }
     })
+
+    // in createLabResult, after creating the result
+    await sendNotification(
+        labOrder.patient.userId,  // need to include patient in labOrder query
+        NotificationType.LAB_RESULT_READY,
+        "Lab Result Ready",
+        `Your ${labOrder.testName} result is now available`,
+        undefined
+    )
 
     await prisma.labOrder.update({
         where: { id: labOrderId },
@@ -162,18 +173,18 @@ export const createLabResult = async (labOrderId: string, userId: string, role:s
 
 export const getLabResultById = async (labResultId: string, userId: string, role: string) => {
     const result = await prisma.labResult.findUnique({ where: { id: labResultId } })
-if(!result) {
-    throw new NotFoundError("result")
-}
+    if (!result) {
+        throw new NotFoundError("result")
+    }
 
-const labOrder = await prisma.labOrder.findUnique({ 
-    where: { id: result.labOrderId }, 
-    include: labOrderInclude 
-  })
+    const labOrder = await prisma.labOrder.findUnique({
+        where: { id: result.labOrderId },
+        include: labOrderInclude
+    })
 
-if (!labOrder) {
-    throw new NotFoundError("lab order")
-}
+    if (!labOrder) {
+        throw new NotFoundError("lab order")
+    }
 
     if (role === "RECEPTIONIST") {
         throw new ForbiddenError("Receptionists cannot access lab result")
