@@ -20,6 +20,7 @@ import auditLogRouter from "./modules/audit-logs/auditLog.routes"
 import { createServer } from "http"
 import { initializeSocket } from "./modules/notifications/notification.gateway"
 import "./queues/email.worker"
+import { startScheduler } from "./jobs/scheduler"
 
 const app = express()
 
@@ -61,5 +62,7 @@ initializeSocket(httpServer)
 httpServer.listen(env.PORT, () => {
   logger.info(`MediCore API running on http://localhost:${env.PORT}`)
 })
+
+startScheduler()
 
 export default app

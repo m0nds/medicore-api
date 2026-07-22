@@ -44,3 +44,25 @@ export const sendResetEmail = async (
     `
   })
 }
+
+export const sendAppointmentReminderEmail = async (
+  email: string,
+  name: string,
+  doctorName: string,
+  scheduledAt: string,
+  reason: string
+): Promise<void> => {
+  await resend.emails.send({
+    from: "noreply@monds.xyz",
+    to: email,
+    subject: "Appointment Reminder — MediCore",
+    html: `
+      <h2>Hi ${name},</h2>
+      <p>This is a reminder that you have an appointment tomorrow.</p>
+      <p><strong>Doctor:</strong> ${doctorName}</p>
+      <p><strong>Time:</strong> ${new Date(scheduledAt).toLocaleString()}</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      <p>Please arrive 10 minutes early.</p>
+    `
+  })
+}
