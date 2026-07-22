@@ -19,6 +19,7 @@ import labResultRouter from "./modules/lab-results/result.routes"
 import auditLogRouter from "./modules/audit-logs/auditLog.routes"
 import { createServer } from "http"
 import { initializeSocket } from "./modules/notifications/notification.gateway"
+import "./queues/email.worker"
 
 const app = express()
 

@@ -6,6 +6,7 @@ import { ConflictError, UnauthorizedError, NotFoundError, AppError } from "../..
 import { comparePassword, hashPassword } from "../../shared/utils/passwordUtils"
 import { generateAccessToken, generateRefreshToken } from "./auth.jwt"
 import { sendResetEmail, sendVerificationEmail } from "./auth.email"
+import { emailQueue } from "../../queues/queue"
 
 export const register = async (input: RegisterInput) => {
     const { name, email, role, password } = input
@@ -59,7 +60,12 @@ export const register = async (input: RegisterInput) => {
 
         return safeUser
     })
-    await sendVerificationEmail(result.email, result.name, token)
+    await emailQueue.add({
+        type: "VERIFICATION",
+        to: email,
+        name,
+        data: { token }
+      })
 
     return result
 }
@@ -157,7 +163,12 @@ export const forgotPassword = async (input: ForgotPasswordInput) => {
             updatedAt: new Date(),
         },
     });
-    await sendResetEmail(email, user.name, resetPasswordToken)
+    await emailQueue.add({
+        type: "RESET_PASSWORD",
+        to: email,
+        name: user.name,
+        data: { token: resetPasswordToken }
+      })
 
     return { message: "If an account with that email exists, you will receive a reset link shortly" }
 
