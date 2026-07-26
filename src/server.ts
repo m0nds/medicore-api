@@ -59,10 +59,11 @@ app.use(errorHandler)
 const httpServer = createServer(app)
 initializeSocket(httpServer)
 
-httpServer.listen(env.PORT, () => {
-  logger.info(`MediCore API running on http://localhost:${env.PORT}`)
-})
-
-startScheduler()
+if (process.env.NODE_ENV !== "test") {
+  httpServer.listen(env.PORT, () => {
+    logger.info(`MediCore API running on http://localhost:${env.PORT}`)
+  })
+  startScheduler()
+}
 
 export default app

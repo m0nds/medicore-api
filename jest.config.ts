@@ -4,10 +4,13 @@ const config: JestConfigWithTsJest = {
     testEnvironment: "node",
     roots: ["<rootDir>/tests"],
     testMatch: ["**/*.test.ts"],
-    setupFiles: ["dotenv/config"],  // ← add this
+    setupFiles: ["dotenv/config", "<rootDir>/tests/setEnv.ts"],
+    globalSetup: "<rootDir>/tests/globalSetup.ts",
+    testEnvironmentOptions: {},
     moduleNameMapper: {
       "^@/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    transformIgnorePatterns: ["node_modules/(?!(uuid)/)"]
   }
 
 export default config
