@@ -8,7 +8,7 @@ import { updateDoctorSchema, updateAvailabilitySchema, assignSpecialisationSchem
 
 export const getAllDoctors = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit } = getPagination(req.query)
-    const doctor = await doctorService.getAllDoctors(req.query)
+    const doctor = await doctorService.getAllDoctors(req.query) as any
     const total = doctor.total
     const totalPages = getTotalPages(total, limit)
     sendPaginated(res, doctor.doctors , {
