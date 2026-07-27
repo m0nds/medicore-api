@@ -15,6 +15,7 @@ Total requests:        28,641
 Failure rate:          0.00%
 Checks passed:         100%
 ```
+<img width="1167" height="821" alt="doctors load test" src="https://github.com/user-attachments/assets/28aa9624-d743-4459-968b-f8d1bb1ccb01" />
 
 Redis caching delivers 53x faster responses on repeated requests (53ms → 1ms).
 
