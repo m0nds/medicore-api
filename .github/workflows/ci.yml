@@ -60,7 +60,7 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
           JWT_ACCESS_SECRET: test-access-secret-minimum-32-characters-long
           JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
-          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000001
+          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
           RESEND_API_KEY: test-key
           REDIS_HOST: localhost
           REDIS_PORT: 6379
@@ -73,7 +73,7 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
           JWT_ACCESS_SECRET: test-access-secret-minimum-32-characters-long
           JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
-          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000001
+          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
           RESEND_API_KEY: test-key
           REDIS_HOST: localhost
           REDIS_PORT: 6379
