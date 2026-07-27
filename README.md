@@ -199,6 +199,9 @@ The UI documents every endpoint with:
 - Role requirements
 - Which fields are encrypted at rest
 
+<img width="1512" height="982" alt="Screenshot 2026-07-27 at 16 59 35" src="https://github.com/user-attachments/assets/ae1a2a23-a48f-4d85-a977-7e94d184e4d9" />
+
+
 ---
 
 
