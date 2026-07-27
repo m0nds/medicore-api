@@ -1,4 +1,5 @@
 # MediCore API
+[![CI](https://github.com/m0nds/medicore-api/actions/workflows/ci.yml/badge.svg)](https://github.com/m0nds/medicore-api/actions/workflows/ci.yml)
 
 A production-grade healthcare clinic management API built with Node.js, Express, TypeScript, PostgreSQL, Prisma, Redis, and Docker. Designed with HIPAA-style compliance from the ground up: field-level AES-256 encryption, role-based access control, immutable audit logs enforced at the database level, real-time WebSocket notifications, and background job processing.
 
