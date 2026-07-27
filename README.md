@@ -214,7 +214,32 @@ GET              /api/files/:id/url
 GET              /health
 ```
 
-Full API documentation available at `/api/docs` (Swagger UI) when running.
+## API Documentation
+
+Interactive Swagger UI available at `/api/docs` when the server is running.
+
+```bash
+# Start server
+npm run dev
+
+# Open in browser
+http://localhost:8080/api/docs
+```
+
+### Using Swagger UI
+
+1. Open `http://localhost:8080/api/docs`
+2. Click **Authorize** (top right)
+3. Enter your access token: `Bearer <token>`
+4. Get a token by calling `POST /api/auth/login` first
+5. All authenticated endpoints will use the token automatically
+
+The UI documents every endpoint with:
+- Required request body schemas
+- Query parameters
+- Response codes
+- Role requirements
+- Which fields are encrypted at rest
 
 ---
 
