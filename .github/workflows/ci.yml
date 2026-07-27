@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medicore_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
+
+      - name: Run unit tests
+        run: npx jest tests/unit/ --no-coverage
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
+          JWT_ACCESS_SECRET: test-access-secret-minimum-32-characters-long
+          JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
+          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000001
+          RESEND_API_KEY: test-key
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Run integration tests
+        run: npx jest tests/integration/ --no-coverage
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medicore_test
+          JWT_ACCESS_SECRET: test-access-secret-minimum-32-characters-long
+          JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
+          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000001
+          RESEND_API_KEY: test-key
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
