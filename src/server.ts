@@ -21,6 +21,7 @@ import { createServer } from "http"
 import { initializeSocket } from "./modules/notifications/notification.gateway"
 import "./queues/email.worker"
 import { startScheduler } from "./jobs/scheduler"
+import { setupSwagger } from "./docs/swagger"
 
 const app = express()
 
@@ -53,6 +54,7 @@ app.get("/health", (_req, res) => {
   })
 })
 
+setupSwagger(app)
 
 app.use(errorHandler)
 
