@@ -5,13 +5,18 @@ import { PrismaClient } from "@prisma/client"
 const prisma = new PrismaClient()
 
 const registerAndLogin = async (role: string, email: string) => {
-  await request(app).post("/api/auth/register").send({
+  const registerRes = await request(app).post("/api/auth/register").send({
     name: "Test User",
     email,
     role,
     password: "Test@1234",
     confirmPassword: "Test@1234"
   })
+  if (registerRes.status !== 201) {
+    throw new Error(
+      `registerAndLogin: register failed for ${email} with status ${registerRes.status}: ${JSON.stringify(registerRes.body)}`
+    )
+  }
   await prisma.user.update({
     where: { email },
     data: { isVerified: true }
