@@ -1,6 +1,7 @@
 import "dotenv/config"
 import express from "express"
 import helmet from "helmet"
+import cors from "cors"
 import cookieParser from "cookie-parser"
 import { env } from "./config/env"
 import logger from "./config/logger"
@@ -28,6 +29,10 @@ const app = express()
 app.use(helmet({
   contentSecurityPolicy: false,  // allows WebSocket connections
   crossOriginEmbedderPolicy: false
+}))
+app.use(cors({
+  origin: env.CLIENT_URL,
+  credentials: true,
 }))
 app.disable("x-powered-by")
 app.use(requestLogger) 

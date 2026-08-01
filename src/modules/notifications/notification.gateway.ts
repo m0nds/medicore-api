@@ -3,6 +3,7 @@ import { Server as SocketServer } from "socket.io"
 import redis from "../../config/redis"
 import { verifyAccessToken } from "../auth/auth.jwt"
 import logger from "../../config/logger"
+import { env } from "../../config/env"
 
 // Map of userId → socketId
 // So we can find which socket to send to
@@ -11,7 +12,7 @@ const userSockets = new Map<string, string>()
 export const initializeSocket = (httpServer: HttpServer) => {
     const io = new SocketServer(httpServer, {
         cors: {
-            origin: process.env.CLIENT_URL || "http://localhost:8080",
+            origin: env.CLIENT_URL,
             methods: ["GET", "POST"]
         }
     })

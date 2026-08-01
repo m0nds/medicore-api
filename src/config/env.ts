@@ -11,6 +11,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string({ error: "RESEND_API_KEY is required" }),
   ENCRYPTION_KEY: z.string({ error: "ENCRYPTION_KEY is required" }),
   BASE_URL: z.string().default("http://localhost:8080"),
+  CLIENT_URL: z.string().default("http://localhost:3000"),
   LOG_LEVEL: z.string().default("info"),
 })
 
