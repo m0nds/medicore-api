@@ -45,8 +45,15 @@ export const encryptIfExists = (value: string | null | undefined): string | null
     return encrypt(value)
 }
 
-// Helper — decrypt a field only if it has a value
+const ENCRYPTED_FORMAT = /^[0-9a-fA-F]+:[0-9a-fA-F]+:[0-9a-fA-F]+$/
+
+/** True when value looks like output from encrypt() — iv:authTag:ciphertext (hex). */
+export const isEncrypted = (value: string): boolean => ENCRYPTED_FORMAT.test(value)
+
+// Helper — decrypt a field only if it has a value.
+// Plaintext values (e.g. manual seed data) are returned as-is instead of throwing.
 export const decryptIfExists = (value: string | null | undefined): string | null => {
     if (!value) return null
+    if (!isEncrypted(value)) return value
     return decrypt(value)
 }

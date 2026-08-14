@@ -16,6 +16,7 @@ const decryptPrescription = (prescription: any) => ({
     medication: decryptIfExists(prescription.medication),
     dosage: decryptIfExists(prescription.dosage),
     frequency: decryptIfExists(prescription.frequency),
+    duration: decryptIfExists(prescription.duration),
     instructions: decryptIfExists(prescription.instructions),
 })
 

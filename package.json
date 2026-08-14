@@ -4,7 +4,8 @@
     "build": "tsc",
     "start": "node dist/server.ts",
     "test": "jest --runInBand",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "scan:unencrypted": "ts-node scripts/scan-unencrypted-fields.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",
